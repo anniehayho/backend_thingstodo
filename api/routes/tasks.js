@@ -10,8 +10,13 @@ router.get('/', (req, res, next) => {
 });
 
 router.post('/', (req, res, next) => {
+  const task = {
+    name: req.body.name,
+    description: req.body.description
+  };
   res.status(200).json({
-    message: 'Hanlding POST requests to /tasks'
+    message: 'Hanlding POST requests to /tasks',
+    createdTask: task
   });
 });
 
