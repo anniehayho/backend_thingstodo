@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-
+import firebase_db from '../../firebase/firebaseConfig';
 
 //Hanle incoming GET requests to /tasks
 router.get('/', (req, res, next) => {
