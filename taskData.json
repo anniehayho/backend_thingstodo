@@ -1,0 +1,69 @@
+[
+    {
+      "id": 1,
+      "date": "2024-03-20",
+      "time": "10:00",
+      "taskName": "Meeting with client",
+      "description": "Have to meet him because I want to show him my latest app design in person.\nAlso need to ask for advice on these:\n- style",
+      "type": "Official",
+      "starred": false,
+      "color": "red",
+      "status": "Later"
+    },
+    {
+      "id": 2,
+      "date": "2024-03-20",
+      "time": "11:00",
+      "taskName": "Launch with July",
+      "description": "Have to meet him because I want to show him my latest app design in person.\nAlso need to ask for advice on these:\n- style",
+      "type": "Family",
+      "starred": false,
+      "color": "blue",
+      "status": "Done"
+    },
+    {
+      "id": 3,
+      "date": "2024-04-10",
+      "time": "12:30",
+      "taskName": "Meet Joseph",
+      "description": "Have to meet him because I want to show him my latest app design in person.\nAlso need to ask for advice on these:\n- style",
+      "type": "Friend",
+      "starred": false,
+      "color": "orange",
+      "status": "Done"
+    },
+    {
+      "id": 4,
+      "date": "2024-04-12",
+      "time": "13:00",
+      "taskName": "Daily meeting",
+      "description": "Have to meet him because I want to show him my latest app design in person.\nAlso need to ask for advice on these:\n- style",
+      "type": "Official",
+      "starred": false,
+      "color": "green",
+      "status": "Later"
+    },
+    {
+      "id": 5,
+      "date": "2024-05-08",
+      "time": "15:00",
+      "taskName": "Launch with Johny",
+      "description": "Have to meet him because I want to show him my latest app design in person.\nAlso need to ask for advice on these:\n- style",
+      "type": "Family",
+      "starred": false,
+      "color": "red",
+      "status": "Pending"
+    },
+    {
+      "id": 6,
+      "date": "2024-05-08",
+      "time": "17:30",
+      "taskName": "Reading book",
+      "description": "Have to meet him because I want to show him my latest app design in person.\nAlso need to ask for advice on these:\n- style",
+      "type": "Friend",
+      "starred": false,
+      "color": "orange",
+      "status": "Pending"
+    }
+  ]
+  
