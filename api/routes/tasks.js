@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const firebase_db = require('../../firebase/firebaseConfig');
-const { collection, getDocs, addDoc, setDoc, where, query, orderBy, groupBy, Timestamp } = require("firebase/firestore");
+const { collection, getDocs,doc,updateDoc,deleteDoc, addDoc, setDoc, where, query, orderBy, groupBy, Timestamp } = require("firebase/firestore");
 const importTaskData = require('../../firebase/importTaskData');
 
 // Sử dụng hàm importTasks
@@ -140,7 +140,22 @@ router.post('/new', async (req, res, next) => {
   // Add the document ID to the document data
   const docData = { ...task, id: docRef.id };
   await setDoc(docRef, docData);
-  
+
+  res.status(200).json({
+    message: 'Hanlding POST requests to /tasks',
+  });
+});
+
+router.put('/updateTask/:id', async (req, res, next) => {
+  const task= req.body;
+  const id = req.params.id;
+  const docRef = doc(collection(firebase_db, 'tasks'), id);
+  console.log("Document written with ID: ", task);
+  const datetime = task['dateTime'].seconds
+  task['dateTime'] = Timestamp.fromMillis(datetime * 1000)
+  // Add the document ID to the document data
+  await updateDoc(docRef, task);
+ 
   res.status(200).json({
     message: 'Hanlding POST requests to /tasks',
   });
@@ -154,9 +169,16 @@ router.patch('/:taskId', (req, res, next) => {
 });
 
 //Hanle incoming DELETE requests to /tasks/:taskId
-router.delete('/:taskId', (req, res, next) => {
+router.put('/deleteTask/:id', (req, res, next) => {
+  const id = req.params.id;
+  const docRef = doc(collection(firebase_db, 'tasks'), id);
+  console.log("Document written with ID: ", id);
+
+  // Add the document ID to the document data
+  deleteDoc(docRef);
+ 
   res.status(200).json({
-    message: 'Deleted task!'
+    message: 'Hanlding POST requests to /tasks',
   });
 });
 
