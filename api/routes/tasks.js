@@ -140,7 +140,7 @@ router.post('/new', async (req, res, next) => {
   // Add the document ID to the document data
   const docData = { ...task, id: docRef.id };
   await setDoc(docRef, docData);
-
+  
   res.status(200).json({
     message: 'Hanlding POST requests to /tasks',
   });
