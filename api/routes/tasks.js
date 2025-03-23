@@ -371,4 +371,97 @@ router.get('/task/:id', async (req, res) => {
   }
 });
 
+// GET important tasks for a specific user
+router.get('/important/:userID', async (req, res) => {
+  try {
+    const userID = req.params.userID;
+    
+    const taskCol = collection(firebase_db, 'tasks');
+    const q = query(
+      taskCol, 
+      where('userID', '==', userID),
+      where('starred', '==', true),
+      orderBy('dateTime', 'desc')
+    );
+    
+    const taskSnapshot = await getDocs(q);
+    const taskList = taskSnapshot.docs.map(doc => doc.data());
+    
+    res.status(200).json({
+      success: true,
+      message: 'Important tasks retrieved successfully',
+      tasks: taskList
+    });
+  } catch (error) {
+    console.error('Error fetching important tasks:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve important tasks',
+      error: error.message
+    });
+  }
+});
+
+// GET done/completed tasks for a specific user
+router.get('/done/:userID', async (req, res) => {
+  try {
+    const userID = req.params.userID;
+    
+    const taskCol = collection(firebase_db, 'tasks');
+    const q = query(
+      taskCol, 
+      where('userID', '==', userID),
+      where('status', '==', 'Done'),
+      orderBy('dateTime', 'desc')
+    );
+    
+    const taskSnapshot = await getDocs(q);
+    const taskList = taskSnapshot.docs.map(doc => doc.data());
+    
+    res.status(200).json({
+      success: true,
+      message: 'Completed tasks retrieved successfully',
+      tasks: taskList
+    });
+  } catch (error) {
+    console.error('Error fetching completed tasks:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve completed tasks',
+      error: error.message
+    });
+  }
+});
+
+// GET tasks scheduled for later for a specific user
+router.get('/later/:userID', async (req, res) => {
+  try {
+    const userID = req.params.userID;
+    
+    const taskCol = collection(firebase_db, 'tasks');
+    const q = query(
+      taskCol, 
+      where('userID', '==', userID),
+      where('status', '==', 'Later'),
+      orderBy('dateTime', 'desc')
+    );
+    
+    const taskSnapshot = await getDocs(q);
+    const taskList = taskSnapshot.docs.map(doc => doc.data());
+    
+    res.status(200).json({
+      success: true,
+      message: 'Later tasks retrieved successfully',
+      tasks: taskList
+    });
+  } catch (error) {
+    console.error('Error fetching later tasks:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve later tasks',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;
