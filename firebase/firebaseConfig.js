@@ -20,4 +20,9 @@ const firebase_app = initializeApp(firebaseConfig);
 const firebase_auth = getAuth(firebase_app);
 const firebase_db = getFirestore(firebase_app);
 
-module.exports = firebase_db, firebase_auth, firebase_app;
+// Export all Firebase services properly
+module.exports = {
+  firebase_db,
+  firebase_auth,
+  firebase_app
+};
