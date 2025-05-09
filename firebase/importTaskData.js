@@ -1,4 +1,4 @@
-const firebase_db = require('./firebaseConfig');
+const { firebase_db } = require('./firebaseConfig');
 const { collection, addDoc } = require("firebase/firestore");
 const { Timestamp } = require("firebase/firestore"); // Import Timestamp class
 
