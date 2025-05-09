@@ -15,36 +15,12 @@ const {
   orderBy, 
   Timestamp 
 } = require("firebase/firestore");
+const authMiddleware = require('../middleware/auth');
 
-// GET all tasks for a specific user
-router.get('/:userID', async (req, res) => {
+// GET today's tasks
+router.get('/today', authMiddleware, async (req, res) => {
   try {
-    const userID = req.params.userID;
-    
-    const taskCol = collection(firebase_db, 'tasks');
-    const q = query(taskCol, where('userID', '==', userID), orderBy('dateTime', 'desc'));
-    const taskSnapshot = await getDocs(q);
-    const taskList = taskSnapshot.docs.map(doc => doc.data());
-    
-    res.status(200).json({
-      success: true,
-      message: 'Tasks retrieved successfully',
-      tasks: taskList
-    });
-  } catch (error) {
-    console.error('Error fetching tasks:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to retrieve tasks',
-      error: error.message
-    });
-  }
-});
-
-// GET today's tasks for a specific user
-router.get('/todayTask/:userID', async (req, res) => {
-  try {
-    const userID = req.params.userID;
+    const userID = req.user.uid;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
@@ -78,10 +54,35 @@ router.get('/todayTask/:userID', async (req, res) => {
   }
 });
 
-// GET weekly tasks for a specific user
-router.get('/weeklyTask/:userID', async (req, res) => {
+// GET all tasks
+router.get('/all', authMiddleware, async (req, res) => {
   try {
-    const userID = req.params.userID;
+    const userID = req.user.uid;
+    
+    const taskCol = collection(firebase_db, 'tasks');
+    const q = query(taskCol, where('userID', '==', userID), orderBy('dateTime', 'desc'));
+    const taskSnapshot = await getDocs(q);
+    const taskList = taskSnapshot.docs.map(doc => doc.data());
+    
+    res.status(200).json({
+      success: true,
+      message: 'Tasks retrieved successfully',
+      tasks: taskList
+    });
+  } catch (error) {
+    console.error('Error fetching tasks:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve tasks',
+      error: error.message
+    });
+  }
+});
+
+// GET weekly tasks
+router.get('/weekly', authMiddleware, async (req, res) => {
+  try {
+    const userID = req.user.uid;
     const today = new Date();
     const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6:1)));
     const endOfWeek = new Date(today.setDate(startOfWeek.getDate() + 6));
@@ -128,10 +129,10 @@ router.get('/weeklyTask/:userID', async (req, res) => {
   }
 });
 
-// GET monthly tasks for a specific user
-router.get('/monthlyTask/:userID', async (req, res) => {
+// GET monthly tasks
+router.get('/monthly', authMiddleware, async (req, res) => {
   try {
-    const userID = req.params.userID;
+    const userID = req.user.uid;
     const today = new Date();
     const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
@@ -179,16 +180,20 @@ router.get('/monthlyTask/:userID', async (req, res) => {
 });
 
 // CREATE a new task
-router.post('/new', async (req, res) => {
+router.post('/new', authMiddleware, async (req, res) => {
   try {
+    const userID = req.user.uid;
     const task = req.body;
     
-    if (!task.date || !task.userID || !task.taskName) {
+    if (!task.date || !task.taskName) {
       return res.status(400).json({
         success: false,
-        message: 'Missing required fields (date, userID, taskName)'
+        message: 'Missing required fields (date, taskName)'
       });
     }
+    
+    // Add userID to task
+    task.userID = userID;
     
     // Parse date and time
     const date = task.date.split('||');
@@ -234,8 +239,9 @@ router.post('/new', async (req, res) => {
 });
 
 // UPDATE a task
-router.put('/updateTask/:id', async (req, res) => {
+router.put('/update/:id', authMiddleware, async (req, res) => {
   try {
+    const userID = req.user.uid;
     const taskId = req.params.id;
     const task = req.body;
     
@@ -246,6 +252,25 @@ router.put('/updateTask/:id', async (req, res) => {
       });
     }
     
+    // Check if the task belongs to the user
+    const docRef = doc(collection(firebase_db, 'tasks'), taskId);
+    const docSnap = await getDoc(docRef);
+    
+    if (!docSnap.exists()) {
+      return res.status(404).json({
+        success: false,
+        message: 'Task not found'
+      });
+    }
+    
+    const taskData = docSnap.data();
+    if (taskData.userID !== userID) {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized: Task does not belong to this user'
+      });
+    }
+    
     // Handle dateTime conversion
     if (task.dateTime && task.dateTime.seconds) {
       const datetime = task.dateTime.seconds;
@@ -253,7 +278,6 @@ router.put('/updateTask/:id', async (req, res) => {
     }
     
     // Update task in Firestore
-    const docRef = doc(collection(firebase_db, 'tasks'), taskId);
     await updateDoc(docRef, task);
     
     res.status(200).json({
@@ -272,8 +296,9 @@ router.put('/updateTask/:id', async (req, res) => {
 });
 
 // DELETE a task
-router.delete('/deleteTask/:id', async (req, res) => {
+router.delete('/delete/:id', authMiddleware, async (req, res) => {
   try {
+    const userID = req.user.uid;
     const taskId = req.params.id;
     
     if (!taskId) {
@@ -283,8 +308,26 @@ router.delete('/deleteTask/:id', async (req, res) => {
       });
     }
     
-    // Delete task from Firestore
+    // Check if the task belongs to the user
     const docRef = doc(collection(firebase_db, 'tasks'), taskId);
+    const docSnap = await getDoc(docRef);
+    
+    if (!docSnap.exists()) {
+      return res.status(404).json({
+        success: false,
+        message: 'Task not found'
+      });
+    }
+    
+    const taskData = docSnap.data();
+    if (taskData.userID !== userID) {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized: Task does not belong to this user'
+      });
+    }
+    
+    // Delete task from Firestore
     await deleteDoc(docRef);
     
     res.status(200).json({
@@ -303,8 +346,9 @@ router.delete('/deleteTask/:id', async (req, res) => {
 });
 
 // For backward compatibility (since your original code used PUT)
-router.put('/deleteTask/:id', async (req, res) => {
+router.put('/delete/:id', authMiddleware, async (req, res) => {
   try {
+    const userID = req.user.uid;
     const taskId = req.params.id;
     
     if (!taskId) {
@@ -314,8 +358,26 @@ router.put('/deleteTask/:id', async (req, res) => {
       });
     }
     
-    // Delete task from Firestore
+    // Check if the task belongs to the user
     const docRef = doc(collection(firebase_db, 'tasks'), taskId);
+    const docSnap = await getDoc(docRef);
+    
+    if (!docSnap.exists()) {
+      return res.status(404).json({
+        success: false,
+        message: 'Task not found'
+      });
+    }
+    
+    const taskData = docSnap.data();
+    if (taskData.userID !== userID) {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized: Task does not belong to this user'
+      });
+    }
+    
+    // Delete task from Firestore
     await deleteDoc(docRef);
     
     res.status(200).json({
@@ -334,8 +396,9 @@ router.put('/deleteTask/:id', async (req, res) => {
 });
 
 // GET a specific task by ID
-router.get('/task/:id', async (req, res) => {
+router.get('/task/:id', authMiddleware, async (req, res) => {
   try {
+    const userID = req.user.uid;
     const taskId = req.params.id;
     
     if (!taskId) {
@@ -349,18 +412,28 @@ router.get('/task/:id', async (req, res) => {
     const docRef = doc(collection(firebase_db, 'tasks'), taskId);
     const docSnap = await getDoc(docRef);
     
-    if (docSnap.exists()) {
-      res.status(200).json({
-        success: true,
-        message: 'Task retrieved successfully',
-        task: docSnap.data()
-      });
-    } else {
-      res.status(404).json({
+    if (!docSnap.exists()) {
+      return res.status(404).json({
         success: false,
         message: 'Task not found'
       });
     }
+    
+    const taskData = docSnap.data();
+    
+    // Check if the task belongs to the user
+    if (taskData.userID !== userID) {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized: Task does not belong to this user'
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      message: 'Task retrieved successfully',
+      task: taskData
+    });
   } catch (error) {
     console.error('Error fetching task:', error);
     res.status(500).json({
@@ -371,10 +444,10 @@ router.get('/task/:id', async (req, res) => {
   }
 });
 
-// GET important tasks for a specific user
-router.get('/important/:userID', async (req, res) => {
+// GET important tasks
+router.get('/important', authMiddleware, async (req, res) => {
   try {
-    const userID = req.params.userID;
+    const userID = req.user.uid;
     
     const taskCol = collection(firebase_db, 'tasks');
     const q = query(
@@ -402,10 +475,10 @@ router.get('/important/:userID', async (req, res) => {
   }
 });
 
-// GET done/completed tasks for a specific user
-router.get('/done/:userID', async (req, res) => {
+// GET done/completed tasks
+router.get('/done', authMiddleware, async (req, res) => {
   try {
-    const userID = req.params.userID;
+    const userID = req.user.uid;
     
     const taskCol = collection(firebase_db, 'tasks');
     const q = query(
@@ -433,10 +506,10 @@ router.get('/done/:userID', async (req, res) => {
   }
 });
 
-// GET tasks scheduled for later for a specific user
-router.get('/later/:userID', async (req, res) => {
+// GET tasks scheduled for later
+router.get('/later', authMiddleware, async (req, res) => {
   try {
-    const userID = req.params.userID;
+    const userID = req.user.uid;
     
     const taskCol = collection(firebase_db, 'tasks');
     const q = query(
