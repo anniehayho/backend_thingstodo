@@ -1,4 +1,4 @@
-const { firebase_auth } = require('../../firebase/firebaseConfig');
+const { adminAuth } = require('../../firebase/firebaseConfig');
 
 // Middleware to verify user is authenticated
 const authMiddleware = async (req, res, next) => {
@@ -26,12 +26,10 @@ const authMiddleware = async (req, res, next) => {
     const token = authHeader.split(' ')[1];
     console.log('Token received');
     
-    // TEMPORARY FIX: Use token as userID 
-    // In a real implementation, you would verify the token with Firebase
-    // const decodedToken = await firebase_auth.verifyIdToken(token);
-    // req.user = { uid: decodedToken.uid };
+    // Verify the token with Firebase Admin SDK
+    const decodedToken = await adminAuth.verifyIdToken(token);
+    req.user = { uid: decodedToken.uid };
     
-    req.user = { uid: token };
     console.log('Setting user ID to:', req.user.uid);
     next();
     

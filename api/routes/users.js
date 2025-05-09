@@ -89,6 +89,9 @@ router.post('/login', async (req, res) => {
     
     const user = userCredential.user;
     
+    // Get the ID token - this is what you need for authentication
+    const idToken = await user.getIdToken();
+    
     // Get additional user information from Firestore
     const userDocRef = doc(firebase_db, "users", user.uid);
     const userDocSnap = await getDoc(userDocRef);
@@ -104,7 +107,8 @@ router.post('/login', async (req, res) => {
           email: user.email,
           firstName: userData.firstName,
           lastName: userData.lastName
-        }
+        },
+        token: idToken // Include the token in the response
       });
     } else {
       // User exists in Authentication but not in Firestore
@@ -114,7 +118,8 @@ router.post('/login', async (req, res) => {
         user: {
           uid: user.uid,
           email: user.email
-        }
+        },
+        token: idToken // Include the token in the response
       });
     }
   } catch (error) {
