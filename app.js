@@ -6,6 +6,13 @@ const bodyParser = require('body-parser');
 const taskRoutes = require('./api/routes/tasks');
 const userRoutes = require('./api/routes/users');
 
+const cors = require('cors');
+
+app.use(cors({
+  origin: ['http://localhost:3000'],
+  credentials: true
+}));
+
 app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
