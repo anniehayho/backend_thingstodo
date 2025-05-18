@@ -3,6 +3,7 @@ const router = express.Router();
 const { firebase_db, firebase_auth } = require('../../firebase/firebaseConfig');
 const { collection, addDoc, getDocs, query, where, setDoc, doc, getDoc } = require("firebase/firestore");
 const { createUserWithEmailAndPassword, signInWithEmailAndPassword } = require("firebase/auth");
+const authMiddleware = require('../middleware/auth');
 
 // Add this near the top of your routes file
 router.get('/test', (req, res) => {
@@ -153,6 +154,21 @@ router.post('/login', async (req, res) => {
       error: error.message
     });
   }
+});
+
+// Logout user
+router.post('/logout', authMiddleware, (req, res) => {
+  // Clear the auth token cookie
+  res.clearCookie('auth_token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict'
+  });
+  
+  res.status(200).json({
+    success: true,
+    message: 'Logged out successfully'
+  });
 });
 
 module.exports = router; 
