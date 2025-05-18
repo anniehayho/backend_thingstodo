@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
 
 const taskRoutes = require('./api/routes/tasks');
 const userRoutes = require('./api/routes/users');
@@ -16,6 +17,7 @@ app.use(cors({
 app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+app.use(cookieParser());
 
 // CORS handling
 app.use((req, res, next) => {

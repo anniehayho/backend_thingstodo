@@ -92,6 +92,14 @@ router.post('/login', async (req, res) => {
     // Get the ID token - this is what you need for authentication
     const idToken = await user.getIdToken();
     
+    // Set the token as an HTTP-only cookie
+    res.cookie('auth_token', idToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // Set secure flag in production
+      sameSite: 'strict',
+      maxAge: 3600000 // 1 hour in milliseconds
+    });
+    
     // Get additional user information from Firestore
     const userDocRef = doc(firebase_db, "users", user.uid);
     const userDocSnap = await getDoc(userDocRef);

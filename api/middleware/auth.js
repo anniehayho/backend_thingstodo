@@ -1,4 +1,5 @@
 const { adminAuth } = require('../../firebase/firebaseConfig');
+const cookieParser = require('cookie-parser');
 
 // Middleware to verify user is authenticated
 const authMiddleware = async (req, res, next) => {
@@ -12,19 +13,29 @@ const authMiddleware = async (req, res, next) => {
       return next();
     }
     
-    // Get the authorization header
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.log('No Authorization header or invalid format');
-      return res.status(401).json({
-        success: false,
-        message: 'Authorization token is required'
-      });
-    }
+    let token;
+    
+    // First check for the auth_token cookie
+    if (req.cookies && req.cookies.auth_token) {
+      token = req.cookies.auth_token;
+      console.log('Using token from cookie');
+    } 
+    // Then fall back to the authorization header
+    else {
+      // Get the authorization header
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        console.log('No Authorization header or cookie found');
+        return res.status(401).json({
+          success: false,
+          message: 'Authorization token is required'
+        });
+      }
 
-    // Extract the token
-    const token = authHeader.split(' ')[1];
-    console.log('Token received');
+      // Extract the token from header
+      token = authHeader.split(' ')[1];
+      console.log('Using token from Authorization header');
+    }
     
     // Verify the token with Firebase Admin SDK
     const decodedToken = await adminAuth.verifyIdToken(token);
