@@ -9,6 +9,9 @@ const userRoutes = require('./api/routes/users');
 
 const cors = require('cors');
 
+// Get base path from environment or use empty string (root)
+const BASE_PATH = process.env.BASE_PATH || '';
+
 const allowedOrigins = process.env.NODE_ENV === 'production' 
   ? [process.env.FRONTEND_URL || 'https://thingstodo-frontend.web.app'] 
   : ['http://localhost:3000'];
@@ -32,6 +35,18 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cookieParser());
 
+// Root path to check if API is running
+app.get(BASE_PATH + '/', (req, res) => {
+  res.status(200).json({
+    message: 'Backend API is running',
+    status: 'online',
+    endpoints: {
+      tasks: BASE_PATH + '/tasks',
+      users: BASE_PATH + '/users'
+    }
+  });
+});
+
 // CORS handling
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
@@ -46,9 +61,9 @@ app.use((req, res, next) => {
   next();
 });
 
-// Routes which should handle requests
-app.use('/tasks', taskRoutes);
-app.use('/users', userRoutes);
+// Routes which should handle requests - with BASE_PATH
+app.use(BASE_PATH + '/tasks', taskRoutes);
+app.use(BASE_PATH + '/users', userRoutes);
 
 // Handle errors
 app.use((req, res, next) => {

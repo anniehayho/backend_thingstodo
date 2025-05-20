@@ -6,4 +6,8 @@ services:
     startCommand: npm start
     envVars:
       - key: NODE_ENV
-        value: production 
+        value: production
+      - key: BASE_PATH
+        value: "https://backend-thingstodo.onrender.com"
+      - key: FRONTEND_URL
+        value: "https://thingstodo-frontend.web.app" 
