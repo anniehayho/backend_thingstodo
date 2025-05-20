@@ -35,35 +35,61 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cookieParser());
 
-// Root path to check if API is running
-app.get(BASE_PATH + '/', (req, res) => {
+// Debug middleware to log all incoming requests
+app.use((req, res, next) => {
+  console.log(`Request path: ${req.path}, Original URL: ${req.originalUrl}`);
+  next();
+});
+
+// Root path to check if API is running - handle both root and BASE_PATH root
+app.get('/', (req, res) => {
   res.status(200).json({
     message: 'Backend API is running',
     status: 'online',
     endpoints: {
-      tasks: BASE_PATH + '/tasks',
-      users: BASE_PATH + '/users'
+      tasks: '/tasks',
+      users: '/users'
     }
   });
 });
 
-// CORS handling
-// app.use((req, res, next) => {
-//   res.header('Access-Control-Allow-Origin', '*');
-//   res.header(
-//     'Access-Control-Allow-Headers',
-//     'Origin, X-Requested-With, Content-Type, Accept, Authorization'
-//   );
-//   if (req.method === 'OPTIONS') {
-//     res.header('Access-Control-Allow-Methods', 'PUT, POST, PATCH, DELETE, GET');
-//     return res.status(200).json({});
-//   }
-//   next();
-// });
+// Also set up the BASE_PATH root if specified
+if (BASE_PATH) {
+  app.get(BASE_PATH + '/', (req, res) => {
+    res.status(200).json({
+      message: 'Backend API is running via BASE_PATH',
+      status: 'online',
+      endpoints: {
+        tasks: BASE_PATH + '/tasks',
+        users: BASE_PATH + '/users'
+      }
+    });
+  });
+}
 
-// Routes which should handle requests - with BASE_PATH
-app.use(BASE_PATH + '/tasks', taskRoutes);
-app.use(BASE_PATH + '/users', userRoutes);
+// CORS handling
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header(
+    'Access-Control-Allow-Headers',
+    'Origin, X-Requested-With, Content-Type, Accept, Authorization'
+  );
+  if (req.method === 'OPTIONS') {
+    res.header('Access-Control-Allow-Methods', 'PUT, POST, PATCH, DELETE, GET');
+    return res.status(200).json({});
+  }
+  next();
+});
+
+// Routes which should handle requests - at root level
+app.use('/tasks', taskRoutes);
+app.use('/users', userRoutes);
+
+// Also set up routes at BASE_PATH if specified
+if (BASE_PATH) {
+  app.use(BASE_PATH + '/tasks', taskRoutes);
+  app.use(BASE_PATH + '/users', userRoutes);
+}
 
 // Handle errors
 app.use((req, res, next) => {

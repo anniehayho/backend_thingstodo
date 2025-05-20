@@ -8,6 +8,6 @@ services:
       - key: NODE_ENV
         value: production
       - key: BASE_PATH
-        value: "https://backend-thingstodo.onrender.com"
+        value: ""
       - key: FRONTEND_URL
         value: "https://thingstodo-frontend.web.app" 
